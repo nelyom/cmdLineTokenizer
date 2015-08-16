@@ -319,6 +319,82 @@ namespace Tokenizer.Tests
             Assert.AreEqual("param\"\"quote", args[0].ToString());
             Assert.AreEqual(1, args.Length);
         }
+
+    }
+
+
+    /// <summary>
+    /// The CommandLineToArgvW does some strange things which shouldn't happen.  I think it be because it is effectively using some really special handing around " characters
+    /// whereas I've chosen SPACE to be the god character, i.e. the defining character to separate arguments, and this allows much better handling of where the start and end 
+    /// of a quoted variable actually is
+    /// it does mean you can pass "a"B", as a parameter and you should expect to get an argument of a"B passed in.
+    ///
+    /// these tests are mainly sourced from complaints referenced here:
+    /// http://weblogs.asp.net/jongalloway//_5B002E00_NET-Gotcha_5D00_-Commandline-args-ending-in-_5C002200_-are-subject-to-CommandLineToArgvW-whackiness
+    /// </summary>
+    [TestClass]
+    public class CommandLineToArgvWFunnyHandling
+    {
+
+
+        [TestMethod]
+        public void ParameterWithLeadingSlashesAndEndSlashesReturnsCorrectNumberOfSlashes()
+        {
+            string commandLine = "\"C:\\Some Folder With A Space\\cmdlineTokenizer.exe\" \\\\this is a test\\\\\\\\\\\"";
+            string[] args = cmdLineTokenizer.Tokenizer.TokenizeCommandLineToStringArray(commandLine);
+            Assert.AreEqual("\\\\this", args[0].ToString());
+            Assert.AreEqual("is", args[1].ToString());
+            Assert.AreEqual("a", args[2].ToString());
+            Assert.AreEqual("test\\\\\\\\\\\"", args[3].ToString());
+            Assert.AreEqual(4, args.Length);
+        }
+
+
+        [TestMethod]
+        public void ParameterWithMidQuoteReturnsParameterWithMidQuote()
+        {
+            string commandLine = "\"C:\\Some Folder With A Space\\cmdlineTokenizer.exe\" \"a\"B\"";
+            string[] args = cmdLineTokenizer.Tokenizer.TokenizeCommandLineToStringArray(commandLine);
+            Assert.AreEqual("a\"B", args[0].ToString());
+            Assert.AreEqual(1, args.Length);
+        }
+
+        [TestMethod]
+        public void LeadingAndEndingSlashesReturnAsExpected()
+        {
+            string commandLine = "\"C:\\Some Folder With A Space\\cmdlineTokenizer.exe\" \"\\\\test\\\\\" \"\\\\test\\\\\\\"";
+            string[] args = cmdLineTokenizer.Tokenizer.TokenizeCommandLineToStringArray(commandLine);
+            Assert.AreEqual("\\\\test\\\\", args[0].ToString());
+            Assert.AreEqual("\\\\test\\\\\\", args[1].ToString());
+            Assert.AreEqual(2, args.Length);
+        }
+
+        [TestMethod]
+        public void LeadingAndEndingSlashesReturnAsExpected2()
+        {
+            string commandLine = "\"C:\\Some Folder With A Space\\cmdlineTokenizer.exe\"  \\\\test\\\\";
+            string[] args = cmdLineTokenizer.Tokenizer.TokenizeCommandLineToStringArray(commandLine);
+            Assert.AreEqual("\\\\test\\\\", args[0].ToString());
+            Assert.AreEqual(1, args.Length);
+        }
+
+        [TestMethod]
+        public void LeadingAndEndingSlashesReturnAsExpected3()
+        {
+            string commandLine = "\"C:\\Some Folder With A Space\\cmdlineTokenizer.exe\"  \"\\\\test\\\\\\\\\"";
+            string[] args = cmdLineTokenizer.Tokenizer.TokenizeCommandLineToStringArray(commandLine);
+            Assert.AreEqual("\\\\test\\\\\\\\", args[0].ToString());
+            Assert.AreEqual(1, args.Length);
+        }
+
+        [TestMethod]
+        public void LeadingAndEndingSlashesReturnAsExpected4()
+        {
+            string commandLine = "\"C:\\Some Folder With A Space\\cmdlineTokenizer.exe\"  \"\\14\\2415\\\"";
+            string[] args = cmdLineTokenizer.Tokenizer.TokenizeCommandLineToStringArray(commandLine);
+            Assert.AreEqual("\\14\\2415\\", args[0].ToString());
+            Assert.AreEqual(1, args.Length);
+        }
     }
 
 
