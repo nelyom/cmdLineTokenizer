@@ -320,6 +320,15 @@ namespace Tokenizer.Tests
             Assert.AreEqual(1, args.Length);
         }
 
+        [TestMethod]
+        public void QuotedArgumentWithSpacesEitherSideReturnsQuotedArgument()
+        {
+            string commandLine = "command.exe \"\" surrounded by \"\"";
+            string[] args = cmdLineTokenizer.Tokenizer.TokenizeCommandLineToStringArray(commandLine);
+            Assert.AreEqual("surrounded", args[0].ToString());
+            Assert.AreEqual("by", args[1].ToString());
+            Assert.AreEqual(2, args.Length);
+        }
     }
 
 

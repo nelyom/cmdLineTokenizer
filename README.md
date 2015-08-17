@@ -32,7 +32,7 @@ However
 ```
 command.exe -o "c:\temp\" -p opt2
 ```
-Will return the expected array with 4 arguments, rather than the 2 arguments you get with CommandLineToArgvW (which returns 2 arguments of `-o` and `c:\temp\" -p opt2` (note than the " in the middle is assumed to be escaped because of the trailing \ on the file path, when in fact it is not))
+Will return the expected array with 4 arguments, rather than the 2 arguments you get with CommandLineToArgvW (which returns 2 arguments of `-o` and `c:\temp" -p opt2` (note than the " in the middle is assumed to be escaped because of the trailing \ on the file path, when in fact it is not))
 
 And 
 ```
@@ -40,11 +40,23 @@ command.exe "a"B"
 ```
 Will return an array with 1 argument of `a"B`, rather than the `aB` argument you get with CommandLineToArgvW
 
+```
+command.exe "a"something"B"
+```
+Will return an array with 1 argument of `a"something"B`.
+
+
 You can also do
+```
+command.exe ""surrounded by""
+```
+Which will return an array with 1 argument of `"surrounded by"`.  Note the outer double quotes are removed.
+
+But
 ```
 command.exe "" surrounded by ""
 ```
-Which will return an array with 1 argument of `"surrounded by "`.  Note the outer double quotes are removed.
+Will return an array with 2 argument of `surrounded` and  `by`.  This is because the "" was followed by a SPACE, which is the ultimate determination that the "" was the start and the end of the quoted parameter.
 
 
 \*Sourced from http://weblogs.asp.net/jongalloway//_5B002E00_NET-Gotcha_5D00_-Commandline-args-ending-in-_5C002200_-are-subject-to-CommandLineToArgvW-whackiness
