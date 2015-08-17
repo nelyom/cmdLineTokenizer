@@ -32,7 +32,8 @@ However
 ```
 command.exe -o "c:\temp\" -p opt2
 ```
-Will return the expected array with 4 arguments, rather than the 2 arguments you get with CommandLineToArgvW (which returns 2 arguments of `-o` and `c:\temp" -p opt2` (note than the " in the middle is assumed to be escaped because of the trailing \ on the file path, when in fact it is not))
+Will return the expected array with 4 arguments of `-o`, `c:\temp\`, `-p` and `opt2`
+CommandLineToArgvW will return 2 arguments of `-o` and `c:\temp" -p opt2`, which is wrong!
 
 And 
 ```
