@@ -18,25 +18,32 @@ These are in fact not quite correct, and a small distinction\* can be written as
   
 All this is rather weird, and appears to be how **CommandLineToArgvW** handles quoting.
 If, however, it used SPACE as the ultimate separator between parameters (unless contained within a set of " " double quotes), things are much easier to deal with.  
-This little tokenizer is my basic attempt to do so.
 
 This tokenizer, uses SPACE as the separator character between options, and a little bit of look behind to determine the start and end of quoted parameters.  The evaluation of parameters is left to right on the CommandLine.
 You simply provide it the Environment.CommandLine.
 
 Examples:
-    command.exe -o opt1 -p opt2 -q opt3
- Will return an array with 6 arguments as expected.
+```
+command.exe -o opt1 -p opt2 -q opt3
+```
+Will return an array with 6 arguments as expected.
 
- However 
-    command.exe -o "c:\temp\" -p opt2
- Will return the expected array with 4 arguments, rather than the 2 arguments you get with CommandLineToArgvW (which returns 2 arguments of `-o` and `c:\temp\" -p opt2` (note than the " in the middle is assumed to be escaped because of the trailing \ on the file path, when in fact it is not))
+However 
+```
+command.exe -o "c:\temp\" -p opt2
+```
+Will return the expected array with 4 arguments, rather than the 2 arguments you get with CommandLineToArgvW (which returns 2 arguments of `-o` and `c:\temp\" -p opt2` (note than the " in the middle is assumed to be escaped because of the trailing \ on the file path, when in fact it is not))
 
- And 
-    command.exe "a"B"
- Will return an array with 1 argument of `a"B`, rather than the `aB` argument you get with CommandLineToArgvW
+And 
+```
+command.exe "a"B"
+```
+Will return an array with 1 argument of `a"B`, rather than the `aB` argument you get with CommandLineToArgvW
 
- You can also do
-    command.exe "" surrounded by ""
+You can also do
+```
+command.exe "" surrounded by ""
+```
 Which will return an array with 1 argument of `"surrounded by "`.  Note the outer double quotes are removed.
 
 
