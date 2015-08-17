@@ -28,14 +28,12 @@ command.exe -o opt1 -p opt2 -q opt3
 ```
 Will return an array with 6 arguments as expected.
 
-However 
 ```
 command.exe -o "c:\temp\" -p opt2
 ```
 Will return the expected array with 4 arguments of `-o`, `c:\temp\`, `-p` and `opt2`
 CommandLineToArgvW will return 2 arguments of `-o` and `c:\temp" -p opt2`, which is wrong!
 
-And 
 ```
 command.exe "a"B"
 ```
@@ -51,13 +49,35 @@ You can also do
 ```
 command.exe ""surrounded by""
 ```
-Which will return an array with 1 argument of `"surrounded by"`.  Note the outer double quotes are removed.
+Which will return an array with 1 argument of `"surrounded by"`.  Note the outer double quotes are removed, but the inner quotes are expected to be part of the argument.
 
-But
 ```
 command.exe "" surrounded by ""
 ```
-Will return an array with 2 argument of `surrounded` and  `by`.  This is because the "" was followed by a SPACE, which is the ultimate determination that the "" was the start and the end of the quoted parameter.
+Will return an array with 1 argument of `" surrounded by "`.  The outer spaces are enclosed by double ", so they are all part of the same argument.
+
+However
+
+```
+command.exe ""
+```
+Will return 0 arguments.
+```
+command.exe "
+```
+Will return 0 arguments.
+
+But
+```
+command.exe " "
+```
+Will return 1 arguments of a SPACE
+
+And an unclosed quoted argument will return a long argument, including the quote.
+```
+command.exe a b "c d e f
+```
+Returns `a`, `b` and `"c d e f`
 
 
 \*Sourced from http://weblogs.asp.net/jongalloway//_5B002E00_NET-Gotcha_5D00_-Commandline-args-ending-in-_5C002200_-are-subject-to-CommandLineToArgvW-whackiness

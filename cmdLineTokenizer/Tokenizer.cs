@@ -39,12 +39,13 @@ namespace cmdLineTokenizer
                     )
                 {
                     //depending on what the lead character is depends on how we mark the starting point
-                    if (currentPosition == 0 || cmdLineCharArray[currentPosition] == '"')
+                    if (cmdLineCharArray[currentPosition] == '"' || currentPosition == 0)
                     {
                         openTokenPosition = currentPosition;
                     }
                     else
                     {
+                        // if this is a SPACE then we can start at the next character
                         openTokenPosition = currentPosition + 1;
                     }
 
@@ -54,11 +55,10 @@ namespace cmdLineTokenizer
                         currentPosition++;
 
                         // If we are at the end of the array
-                        // or we have hit a ", the openToken was a " and the next character is a SPACE
+                        // or we have hit a ", the openToken was a " and the next character is a SPACE, and the token is going to be at least 2 characters (including the quotes!)
                         // or we have hit a SPACE and the openToken is not a "
-                        // or this is the first token, we have hit a space and the openToken is not a "
                         if (currentPosition == cmdLineLength
-                            || (cmdLineCharArray[currentPosition] == '"' && cmdLineCharArray[openTokenPosition] == '"' && cmdLineCharArray[currentPosition + 1] == ' ')
+                            || (cmdLineCharArray[currentPosition] == '"' && cmdLineCharArray[openTokenPosition] == '"' && cmdLineCharArray[currentPosition + 1] == ' ' && currentPosition - openTokenPosition > 1)
                             || (cmdLineCharArray[currentPosition] == ' ' && cmdLineCharArray[openTokenPosition] != '"')
                             )
                         {
@@ -80,14 +80,15 @@ namespace cmdLineTokenizer
                 //grab our token, and remove any leading/trailing whitespace.
                 var token = commandLine.Substring(openTokenPosition, closeTokenPosition - openTokenPosition).Trim();
 
-                // If we have a token enclosed in " " then we should strip them - this happens using the standard Windows parser (although that has weird condition that this parser resolves)
+                // If we have a token enclosed in " " then we should strip them - this happens using the standard function CommandLineToArgvW.
                 if (token.StartsWith("\"") && token.EndsWith("\""))
                 {
+                    // if we have a single quote as an argument, then drop it altogether.... not sure this a correct assumption yet.
                     if (token.Length == 1)
                     {
                         token = string.Empty;
                     }
-                    else
+                    else // we have an argument with quotes at either end so remove the outer quotes.
                     {
                         token = token.Substring(1, token.Length - 2);
                     }
