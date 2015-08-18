@@ -31,11 +31,11 @@ namespace cmdLineTokenizer
             {
                 // The beginning of the token is easy because we have figured out the end point of the previous token already
                 // We are at the beginning of the command line
-                // or the the character is a "
                 // or we have found a SPACE
+                // or the the character is a "  (we dont need to check for a preceding space because that would have triggered entry already)
                 if (currentPosition == 0
-                    || (cmdLineCharArray[currentPosition] == '"')
                     || (cmdLineCharArray[currentPosition] == ' ')
+                    || (cmdLineCharArray[currentPosition] == '"')
                     )
                 {
                     //depending on what the lead character is depends on how we mark the starting point
@@ -45,7 +45,7 @@ namespace cmdLineTokenizer
                     }
                     else
                     {
-                        // if this is a SPACE then we can start at the next character
+                        // if this is a SPACE then we can start at the next character (which might actually be a ")
                         openTokenPosition = currentPosition + 1;
                     }
 

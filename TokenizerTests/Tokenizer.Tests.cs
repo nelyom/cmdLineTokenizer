@@ -340,6 +340,18 @@ namespace Tokenizer.Tests
         }
 
         [TestMethod]
+        public void MultiQuotedArgumentWithSpacesEitherSideOfContentsReturnsMultiQuotedArgument()
+        {
+            string commandLine = "command.exe \"\"\"\"\" surrounded by \"\"\"\"\"";
+            string[] args = cmdLineTokenizer.Tokenizer.TokenizeCommandLineToStringArray(commandLine);
+            Assert.AreEqual("\"\"\"", args[0].ToString());
+            Assert.AreEqual("surrounded", args[1].ToString());
+            Assert.AreEqual("by", args[2].ToString());
+            Assert.AreEqual("\"\"\"", args[3].ToString());
+            Assert.AreEqual(4, args.Length);
+        }
+
+        [TestMethod]
         public void SingleQuotedArgumentWithSpacesEitherSideOfContentsReturnsArgumentWithSpaces()
         {
             string commandLine = "command.exe \" surrounded by \"";
@@ -372,9 +384,63 @@ namespace Tokenizer.Tests
         }
 
 
+        [TestMethod]
+        public void TwelveInternalQuotesReturnsArgumentWith12InternalQuotes()
+        {
+            //CommandLineToArgvW returns 4 internal quotes, even though 12 are supplied
+            string commandLine = "command.exe foo\"\"\"\"\"\"\"\"\"\"\"\"bar";
+            string[] args = cmdLineTokenizer.Tokenizer.TokenizeCommandLineToStringArray(commandLine);
+            Assert.AreEqual("foo\"\"\"\"\"\"\"\"\"\"\"\"bar", args[0].ToString());
+            Assert.AreEqual(1, args.Length);
+        }
+
+        [TestMethod]
+        public void ManyExternalQuotesReturnExpectedCount()
+        {
+            //CommandLineToArgvW returns 2 external quotes either side, even though 4 are supplied.
+            // in our case we return 3 either side as we only take note of the 2 outermost
+            string commandLine = "command.exe \"\"\"\"\"foo\"\"\"\"\"";
+            string[] args = cmdLineTokenizer.Tokenizer.TokenizeCommandLineToStringArray(commandLine);
+            Assert.AreEqual("\"\"\"\"foo\"\"\"\"", args[0].ToString());
+            Assert.AreEqual(1, args.Length);
+        }
 
 
+        [TestMethod]
+        public void OneInternalQuotesReturnExpectedCount()
+        {
+            string commandLine = "command.exe foo\"bar";
+            string[] args = cmdLineTokenizer.Tokenizer.TokenizeCommandLineToStringArray(commandLine);
+            Assert.AreEqual("foo\"bar", args[0].ToString());
+            Assert.AreEqual(1, args.Length);
+        }
 
+        [TestMethod]
+        public void TwoInternalQuotesReturnsArgumentWith2InternalQuotes()
+        {
+            string commandLine = "command.exe foo\"\"bar";
+            string[] args = cmdLineTokenizer.Tokenizer.TokenizeCommandLineToStringArray(commandLine);
+            Assert.AreEqual("foo\"\"bar", args[0].ToString());
+            Assert.AreEqual(1, args.Length);
+        }
+
+        [TestMethod]
+        public void ThreeInternalQuotesReturnsArgumentWith3InternalQuotes()
+        {
+            string commandLine = "command.exe foo\"\"\"bar";
+            string[] args = cmdLineTokenizer.Tokenizer.TokenizeCommandLineToStringArray(commandLine);
+            Assert.AreEqual("foo\"\"\"bar", args[0].ToString());
+            Assert.AreEqual(1, args.Length);
+        }
+
+        [TestMethod]
+        public void InteralQuotesReturnsArgumentWithInternalQuotes()
+        {
+            string commandLine = "command.exe foo\"x\"\"bar";
+            string[] args = cmdLineTokenizer.Tokenizer.TokenizeCommandLineToStringArray(commandLine);
+            Assert.AreEqual("foo\"x\"\"bar", args[0].ToString());
+            Assert.AreEqual(1, args.Length);
+        }
 
     }
 
