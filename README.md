@@ -58,7 +58,7 @@ command.exe -o "c:\temp\" -p opt2
 Will return the expected array with 4 arguments of `-o`, `c:\temp\`, `-p` and `opt2`
 
 ```
-command.exe "a"B"
+command.exe a"B
 ```
 Will return an array with 1 argument of `a"B`
 
@@ -90,13 +90,11 @@ command.exe """"" surrounded by """""
 ```
 Will return an array with 4 arguments of `"""`, `surrounded`, `by`, and `"""`.
 
+
+
+Some special cases...
 ```
 command.exe ""
-```
-Will return 0 arguments.
-
-```
-command.exe "
 ```
 Will return 0 arguments.
 
@@ -105,11 +103,18 @@ command.exe " "
 ```
 Will return 1 arguments of a SPACE (okay this might be weird, but it is what you entered!)
 
-An unclosed quoted argument will return a long argument.
+An unclosed quoted argument will return a long argument including the single quote.
 ```
 command.exe a b "c d e f
 ```
 Returns `a`, `b` and `"c d e f`
+
+But a single quote will return no arguments.
+```
+command.exe "
+```
+Will return 1 arguments of `"`
+
 
 
 

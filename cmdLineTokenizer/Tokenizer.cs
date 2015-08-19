@@ -29,25 +29,14 @@ namespace cmdLineTokenizer
 
             for (; currentPosition < cmdLineLength;)
             {
-                // The beginning of the token is easy because we have figured out the end point of the previous token already
-                // We are at the beginning of the command line
-                // or we have found a SPACE
-                // or the the character is a "  (we dont need to check for a preceding space because that would have triggered entry already)
-                if (currentPosition == 0
-                    || (cmdLineCharArray[currentPosition] == ' ')
-                    || (cmdLineCharArray[currentPosition] == '"')
-                    )
+                // if we are looking at a SPACE move on.  Tokens start at the next character....
+                if (cmdLineCharArray[currentPosition] == ' ')
                 {
-                    //depending on what the lead character is depends on how we mark the starting point
-                    if (cmdLineCharArray[currentPosition] == '"' || currentPosition == 0)
-                    {
-                        openTokenPosition = currentPosition;
-                    }
-                    else
-                    {
-                        // if this is a SPACE then we can start at the next character (which might actually be a ")
-                        openTokenPosition = currentPosition + 1;
-                    }
+                    currentPosition++;
+                }
+                else
+                {
+                    openTokenPosition = currentPosition;
 
                     //Let go look for the end of this token!
                     do
@@ -55,49 +44,53 @@ namespace cmdLineTokenizer
                         currentPosition++;
 
                         // If we are at the end of the array
-                        // or we have hit a ", the openToken was a " and the next character is a SPACE, and the token is going to be at least 2 characters (including the quotes!)
-                        // or we have hit a SPACE and the openToken is not a "
-                        if (currentPosition == cmdLineLength
-                            || (cmdLineCharArray[currentPosition] == '"' && cmdLineCharArray[openTokenPosition] == '"' && cmdLineCharArray[currentPosition + 1] == ' ' && currentPosition - openTokenPosition > 1)
-                            || (cmdLineCharArray[currentPosition] == ' ' && cmdLineCharArray[openTokenPosition] != '"')
-                            )
+                        if (currentPosition == cmdLineLength)
                         {
-                            //The end position of a token depends on whether we want to include the character in the current token, and set the pointer to the next character
-                            // or the current character is not part of the token and in fact is the separater that is used to determine the split between tokens.
-                            if (currentPosition == cmdLineLength || cmdLineCharArray[currentPosition] == '"')
+                            closeTokenPosition = ++currentPosition;   //increment then assign.
+                        }
+                        else
+                        {
+                            // if we are at a SPACE, then check out whether we are at the end of a token
+                            if (cmdLineCharArray[currentPosition] == ' ')
                             {
-                                closeTokenPosition = currentPosition + 1;
-                                currentPosition += 1;
-                            }
-                            else
-                            {
-                                closeTokenPosition = currentPosition;
+                                // if the start of this token was a " and the previous character (we are at a SPACE remember) was a ", 
+                                // and this token actually contains something (other than the quotes), then close it off
+                                // or if we didn't start with a quote and we are at a space, then close this token off.
+                                if ((cmdLineCharArray[openTokenPosition] == '"' && cmdLineCharArray[currentPosition - 1] == '"' && currentPosition - openTokenPosition > 2) ||
+                                    (cmdLineCharArray[openTokenPosition] != '"')
+                                    )
+                                {
+                                    closeTokenPosition = currentPosition++;  // saves the current position and then increments afterwards.
+                                }
+
                             }
                         }
+
                     } while (closeTokenPosition == 0);
-                }
 
-                //grab our token, and remove any leading/trailing whitespace.
-                var token = commandLine.Substring(openTokenPosition, closeTokenPosition - openTokenPosition).Trim();
 
-                // If we have a token enclosed in " " then we should strip them - this happens using the standard function CommandLineToArgvW.
-                if (token.StartsWith("\"") && token.EndsWith("\""))
-                {
-                    // if we have a single quote as an argument, then drop it altogether.... not sure this a correct assumption yet.
-                    if (token.Length == 1)
+                    //grab our token, and remove any leading/trailing whitespace (this only deals with the scenario where we open a quoted token, but dont close it and have trail spaces)
+                    var token = commandLine.Substring(openTokenPosition, closeTokenPosition - openTokenPosition).Trim();
+
+                    // If we have a token enclosed in " " then we should strip them - this happens using the standard function CommandLineToArgvW.
+                    if (token.StartsWith("\"") && token.EndsWith("\""))
                     {
-                        token = string.Empty;
+                        // if we have a single quote as an argument, then drop it altogether.... not sure this a correct assumption yet.
+                        if (token.Length == 1)
+                        {
+                            token = string.Empty;
+                        }
+                        else // we have an argument with quotes at either end so remove the outer quotes.
+                        {
+                            token = token.Substring(1, token.Length - 2);
+                        }
                     }
-                    else // we have an argument with quotes at either end so remove the outer quotes.
-                    {
-                        token = token.Substring(1, token.Length - 2);
-                    }
+
+                    tokens.Add(token);
+
+                    //Reset the closeTokenPosition tracker (only needed because it is used to determine loop
+                    closeTokenPosition = 0;
                 }
-
-                tokens.Add(token);
-
-                //Reset the closeTokenPosition tracker (only needed because it is used to determine loop
-                closeTokenPosition = 0;
             }
 
             //remove any entries which are empty (caused by having double spaces in between tokens

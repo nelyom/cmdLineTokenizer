@@ -176,12 +176,32 @@ namespace Tokenizer.Tests
             Assert.AreEqual(2, args.Length);
         }
 
-                [TestMethod]
-        public void MultipleSpacesBetweenTwoArgumentsAreIgnored()
+        [TestMethod]
+        public void TwoSpacesBetweenTwoUnquotedArgumentsAreIgnored()
         {
-            string commandLine = "\"C:\\Some Folder With A Space\\cmdlineTokenizer.exe\" \"C:\\some file path\\\"   hhes";
+            string commandLine = "\"C:\\Some Folder With A Space\\cmdlineTokenizer.exe\" arg  hhes";
             string[] args = cmdLineTokenizer.Tokenizer.TokenizeCommandLineToStringArray(commandLine);
-            Assert.AreEqual("C:\\some file path\\", args[0].ToString());
+            Assert.AreEqual("arg", args[0].ToString());
+            Assert.AreEqual("hhes", args[1].ToString());
+            Assert.AreEqual(2, args.Length);
+        }
+
+        [TestMethod]
+        public void ThreeSpacesBetweenTwoUnquotedArgumentsAreIgnored()
+        {
+            string commandLine = "\"C:\\Some Folder With A Space\\cmdlineTokenizer.exe\" arg   hhes";
+            string[] args = cmdLineTokenizer.Tokenizer.TokenizeCommandLineToStringArray(commandLine);
+            Assert.AreEqual("arg", args[0].ToString());
+            Assert.AreEqual("hhes", args[1].ToString());
+            Assert.AreEqual(2, args.Length);
+        }
+
+        [TestMethod]
+        public void FourSpacesBetweenTwoUnquotedArgumentsAreIgnored()
+        {
+            string commandLine = "\"C:\\Some Folder With A Space\\cmdlineTokenizer.exe\" arg    hhes";
+            string[] args = cmdLineTokenizer.Tokenizer.TokenizeCommandLineToStringArray(commandLine);
+            Assert.AreEqual("arg", args[0].ToString());
             Assert.AreEqual("hhes", args[1].ToString());
             Assert.AreEqual(2, args.Length);
         }
@@ -265,6 +285,7 @@ namespace Tokenizer.Tests
         {
             string commandLine = "foo.exe \" ";
             string[] args = cmdLineTokenizer.Tokenizer.TokenizeCommandLineToStringArray(commandLine);
+            //Assert.AreEqual("\"", args[0].ToString());
             Assert.AreEqual(0, args.Length);
         }
 
@@ -273,6 +294,7 @@ namespace Tokenizer.Tests
         {
             string commandLine = "\"C:\\f a\\foo.exe\" \" ";
             string[] args = cmdLineTokenizer.Tokenizer.TokenizeCommandLineToStringArray(commandLine);
+            //Assert.AreEqual("\"", args[0].ToString());
             Assert.AreEqual(0, args.Length);
         }
 
