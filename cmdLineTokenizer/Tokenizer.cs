@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -19,82 +20,69 @@ namespace cmdLineTokenizer
         {
 
             List<string> tokens = new List<string>();
-            int currentPosition = 0;
-            int openTokenPosition = 0;
-            int closeTokenPosition = 0;
+            var parts = commandLine.Split(' ');
+            StringBuilder token = new StringBuilder(255);
 
-            // this removes all the escaping that was in place on the command line (and does a fairly decent job of it)!
-            var cmdLineCharArray = commandLine.ToCharArray();
-            int cmdLineLength = cmdLineCharArray.GetUpperBound(0);
-
-            for (; currentPosition < cmdLineLength;)
+            for (int curPart = 0; curPart < parts.Length; curPart++)
             {
-                // if we are looking at a SPACE move on.  Tokens start at the next character....
-                if (cmdLineCharArray[currentPosition] == ' ')
-                {
-                    currentPosition++;
-                }
-                else
-                {
-                    openTokenPosition = currentPosition;
 
-                    //Let go look for the end of this token!
-                    do
+                if (parts[curPart].StartsWith("\""))
+                {
+                    //remove leading "
+                    token.Append(parts[curPart].Substring(1));
+                    int has1NQuote = 0;
+
+                    //find out whether the current token has the required 1 leftover "
+                    for (int i = parts[curPart].Length - 1; i > 0; i--)
                     {
-                        currentPosition++;
-
-                        // If we are at the end of the array
-                        if (currentPosition == cmdLineLength)
+                        if (parts[curPart][i] == '"')
                         {
-                            closeTokenPosition = ++currentPosition;   //increment then assign.
+                            has1NQuote += 1;
                         }
                         else
                         {
-                            // if we are at a SPACE, then check out whether we are at the end of a token
-                            if (cmdLineCharArray[currentPosition] == ' ')
-                            {
-                                // if the start of this token was a " and the previous character (we are at a SPACE remember) was a ", 
-                                // and this token actually contains something (other than the quotes), then close it off
-                                // or if we didn't start with a quote and we are at a space, then close this token off.
-                                if ((cmdLineCharArray[openTokenPosition] == '"' && cmdLineCharArray[currentPosition - 1] == '"' && currentPosition - openTokenPosition > 2) ||
-                                    (cmdLineCharArray[openTokenPosition] != '"')
-                                    )
-                                {
-                                    closeTokenPosition = currentPosition++;  // saves the current position and then increments afterwards.
-                                }
-
-                            }
-                        }
-
-                    } while (closeTokenPosition == 0);
-
-
-                    //grab our token, and remove any leading/trailing whitespace (this only deals with the scenario where we open a quoted token, but dont close it and have trail spaces)
-                    var token = commandLine.Substring(openTokenPosition, closeTokenPosition - openTokenPosition).Trim();
-
-                    // If we have a token enclosed in " " then we should strip them - this happens using the standard function CommandLineToArgvW.
-                    if (token.StartsWith("\"") && token.EndsWith("\""))
-                    {
-                        // if we have a single quote as an argument, then drop it altogether.... not sure this a correct assumption yet.
-                        if (token.Length == 1)
-                        {
-                            token = string.Empty;
-                        }
-                        else // we have an argument with quotes at either end so remove the outer quotes.
-                        {
-                            token = token.Substring(1, token.Length - 2);
+                            break;
                         }
                     }
 
-                    tokens.Add(token);
+                    // if we didn't have a leftover ", then we need to add some more parts to the current token
+                    while (has1NQuote % 2 == 0 && (curPart != parts.Length - 1))
+                    {
+                        has1NQuote = 0;
+                        curPart++;
 
-                    //Reset the closeTokenPosition tracker (only needed because it is used to determine loop
-                    closeTokenPosition = 0;
+                        for (int i = parts[curPart].Length - 1; i >= 0; i--)
+                        {
+                            if (parts[curPart][i] == '"')
+                            {
+                                has1NQuote += 1;
+                            }
+                            else
+                            {
+                                break;
+                            }
+                        }
+                        token.Append(' ').Append(parts[curPart]);
+                    }
+
+                    //remove trailing " if we had a leftover (if we didn't have a leftover then we hit the end of the parts)
+                    if (has1NQuote%2 != 0)
+                    {
+                        token.Remove(token.Length - 1, 1);
+                    }
                 }
+                else
+                {
+                    token.Append(parts[curPart]);
+                }
+
+                //strip whitespace.
+                if (!string.IsNullOrEmpty(token.ToString().Trim()))
+                tokens.Add(token.ToString().Trim());
+                
+                token.Clear();
             }
 
-            //remove any entries which are empty (caused by having double spaces in between tokens
-            tokens.RemoveAll(val => val == string.Empty);
 
             // remove the first argument.  This is the executable path.
             tokens.RemoveAt(0);

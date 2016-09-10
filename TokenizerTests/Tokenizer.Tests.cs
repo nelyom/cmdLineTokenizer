@@ -249,7 +249,7 @@ namespace Tokenizer.Tests
 
     [TestClass]
     //These particular tests are oddball cases, which I am not sure should pass as they stand.  The behaviour could go either way, and perhaps these ones should
-    // really return multiple arguments, no argumnents, or just error (although this seems like a bad plan.
+    // really return multiple arguments, no argumnents, or just error (although this seems like a bad plan).
     // As it stands they do not, as SPACE is being used as the GOD separator character, and even though a Quote may be used
     // to denote the beginning and the end of a parameter, it may be desirable to include them as a potential input value under the right circumstances.
     public class QuoteArgumentCases
@@ -269,15 +269,18 @@ namespace Tokenizer.Tests
             string commandLine = "foo.exe \"\"";
             string[] args = cmdLineTokenizer.Tokenizer.TokenizeCommandLineToStringArray(commandLine);
             Assert.AreEqual(0, args.Length);
+            //Assert.AreEqual("\"", args[0]);
+
         }
 
         [TestMethod]
-        public void ArgumentIsPairQuoteWrappingSPACEReturnsSPACEArgument()
+        public void ArgumentIsPairQuoteWrappingSPACEReturnsNoArgument()
         {
             string commandLine = "foo.exe \" \"";
             string[] args = cmdLineTokenizer.Tokenizer.TokenizeCommandLineToStringArray(commandLine);
-            Assert.AreEqual(" ", args[0].ToString());
-            Assert.AreEqual(1, args.Length);
+            Assert.AreEqual(0, args.Length);
+            //Assert.AreEqual(1, args.Length);
+            //Assert.AreEqual(" ", args[0]);
         }
 
         [TestMethod]
@@ -303,7 +306,7 @@ namespace Tokenizer.Tests
         {
             string commandLine = "\"C:\\Some Folder With A Space\\cmdlineTokenizer.exe\" \"\\\"paramquote\\\"\"";
             string[] args = cmdLineTokenizer.Tokenizer.TokenizeCommandLineToStringArray(commandLine);
-            Assert.AreEqual("\\\"paramquote\\\"", args[0].ToString());
+            Assert.AreEqual("\\\"paramquote\\\"\"", args[0].ToString());
             Assert.AreEqual(1, args.Length);
         }
 
@@ -312,7 +315,7 @@ namespace Tokenizer.Tests
         {
             string commandLine = "\"C:\\Some Folder With A Space\\cmdlineTokenizer.exe\" \"\"paramquote\"\"";
             string[] args = cmdLineTokenizer.Tokenizer.TokenizeCommandLineToStringArray(commandLine);
-            Assert.AreEqual("\"paramquote\"", args[0].ToString());
+            Assert.AreEqual("\"paramquote\"\"", args[0].ToString());
             Assert.AreEqual(1, args.Length);
         }
 
@@ -353,12 +356,34 @@ namespace Tokenizer.Tests
         }
 
         [TestMethod]
-        public void DoubleQuotedArgumentWithSpacesEitherSideOfContentsReturnsQuotedArgument()
+        public void DoubleQuotedArgumentWithSpacesEitherSideOfContentsReturnsIndividualArguments()
         {
             string commandLine = "command.exe \"\" surrounded by \"\"";
             string[] args = cmdLineTokenizer.Tokenizer.TokenizeCommandLineToStringArray(commandLine);
-            Assert.AreEqual("\" surrounded by \"", args[0].ToString());
+            Assert.AreEqual("surrounded", args[0].ToString());
+            Assert.AreEqual("by", args[1].ToString());
+            Assert.AreEqual(2, args.Length);
+        }
+
+        [TestMethod]
+        public void MultiQuotedArgumentWith3QuotesSpacesEitherSideOfContentsReturnsSplitArgument()
+        {
+            string commandLine = "command.exe \"\"\" surrounded by \"\"\"";
+            string[] args = cmdLineTokenizer.Tokenizer.TokenizeCommandLineToStringArray(commandLine);
+            Assert.AreEqual("\"\" surrounded by \"\"", args[0].ToString());
             Assert.AreEqual(1, args.Length);
+        }
+
+        [TestMethod]
+        public void MultiQuotedArgumentWith4QuotesSpacesEitherSideOfContentsReturnsSplitArgument()
+        {
+            string commandLine = "command.exe \"\"\"\" surrounded by \"\"\"\"";
+            string[] args = cmdLineTokenizer.Tokenizer.TokenizeCommandLineToStringArray(commandLine);
+            Assert.AreEqual("\"\"", args[0].ToString());
+            Assert.AreEqual("surrounded", args[1].ToString());
+            Assert.AreEqual("by", args[2].ToString());
+            Assert.AreEqual("\"\"", args[3].ToString());
+            Assert.AreEqual(4, args.Length);
         }
 
         [TestMethod]
@@ -366,11 +391,8 @@ namespace Tokenizer.Tests
         {
             string commandLine = "command.exe \"\"\"\"\" surrounded by \"\"\"\"\"";
             string[] args = cmdLineTokenizer.Tokenizer.TokenizeCommandLineToStringArray(commandLine);
-            Assert.AreEqual("\"\"\"", args[0].ToString());
-            Assert.AreEqual("surrounded", args[1].ToString());
-            Assert.AreEqual("by", args[2].ToString());
-            Assert.AreEqual("\"\"\"", args[3].ToString());
-            Assert.AreEqual(4, args.Length);
+            Assert.AreEqual("\"\"\"\" surrounded by \"\"\"\"", args[0].ToString());
+            Assert.AreEqual(1, args.Length);
         }
 
         [TestMethod]
@@ -378,7 +400,7 @@ namespace Tokenizer.Tests
         {
             string commandLine = "command.exe \" surrounded by \"";
             string[] args = cmdLineTokenizer.Tokenizer.TokenizeCommandLineToStringArray(commandLine);
-            Assert.AreEqual(" surrounded by ", args[0].ToString());
+            Assert.AreEqual("surrounded by", args[0].ToString());
             Assert.AreEqual(1, args.Length);
         }
 
@@ -388,6 +410,15 @@ namespace Tokenizer.Tests
             string commandLine = "command.exe \"a\"something\"B\"";
             string[] args = cmdLineTokenizer.Tokenizer.TokenizeCommandLineToStringArray(commandLine);
             Assert.AreEqual("a\"something\"B", args[0].ToString());
+            Assert.AreEqual(1, args.Length);
+        }
+
+        [TestMethod]
+        public void ArgumentWithQuoteInMiddleReturnsArgumentWithQuoteInMiddle()
+        {
+            string commandLine = "command.exe a\"B";
+            string[] args = cmdLineTokenizer.Tokenizer.TokenizeCommandLineToStringArray(commandLine);
+            Assert.AreEqual("a\"B", args[0].ToString());
             Assert.AreEqual(1, args.Length);
         }
 
@@ -401,7 +432,7 @@ namespace Tokenizer.Tests
             Assert.AreEqual("o", args[0].ToString());
             Assert.AreEqual("p", args[1].ToString());
             Assert.AreEqual("d", args[2].ToString());
-            Assert.AreEqual("\"a something B", args[3].ToString());
+            Assert.AreEqual("a something B", args[3].ToString());
             Assert.AreEqual(4, args.Length);
         }
 

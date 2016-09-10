@@ -39,10 +39,10 @@ If we look through .NET, we see that **Environment.CommandLine** is exactly what
 
 ###What are our natural rules?
 
-1. If you are outside quotations marks, SPACE is the separator between arguments.
-2. If you are outside quotations marks, a SPACE followed by " will take you inside quotation marks.
-3. If you are inside quotation marks, then a second quotation mark followed by a SPACE (or the end of the command line) will signify the end of the quoted block.
-4. Enclosing quotation marks (i.e. at both ends) are not returned as part of an argument.
+1. SPACE is the separator between arguments.
+2. If you are outside quotations marks, a SPACE followed by " will take you inside quotation marks, but generates no output.
+3. If you are inside quotation marks, then a sequence of 2N+1 quotation mark followed by a SPACE (or the end of the command line) will signify the end of the quoted block (note: N can be 0).  The +1 quotation mark generates no output.
+4. All returned arguments trim leading and trailing whitespace.
 
 Seems simple enough..
 
@@ -79,16 +79,26 @@ command.exe ""surrounded by""
 Which will return an array with 1 argument of `"surrounded by"`.  Note the outer double quotes are removed, but the inner quotes are expected to be part of the argument.
 
 
-However
+However add in some whitespace and it can be a little odd.
 ```
 command.exe "" surrounded by ""
 ```
 Will return an array with 2 arguments of `surrounded` and `by`.  The double quotes are followed by spaces, so these end up being zero length arguments (which are dropped).
 
 ```
+command.exe """ surrounded by """
+```
+Will return an array with 1 arguments of `"" surrounded by ""`.
+
+```
+command.exe """" surrounded by """"
+```
+Will return an array with 4 arguments of `"""`, `surrounded`, `by` and `"""`.
+
+```
 command.exe """"" surrounded by """""
 ```
-Will return an array with 4 arguments of `"""`, `surrounded`, `by`, and `"""`.
+Will return an array with 1 arguments of `"""" surrounded by """"`.
 
 
 
@@ -101,23 +111,23 @@ Will return 0 arguments.
 ```
 command.exe " "
 ```
-Will return 1 arguments of a SPACE (okay this might be weird, but it is what you entered!)
+Will return 0 arguments.
 
-An unclosed quoted argument will return a long argument including the single quote.
+An unclosed quoted argument will return a long argument excluding the single quote.
 ```
 command.exe a b "c d e f
 ```
-Returns `a`, `b` and `"c d e f`
+Returns `a`, `b` and `c d e f`
 
-But a single quote will return no arguments.
+A single quote will return no arguments.
 ```
 command.exe "
 ```
-Will return 1 arguments of `"`
-
+Returns 0 arguments
 
 
 
 [blog post]: http://weblogs.asp.net/jongalloway//_5B002E00_NET-Gotcha_5D00_-Commandline-args-ending-in-_5C002200_-are-subject-to-CommandLineToArgvW-whackiness
 [Windows Insider]: http://www.windowsinspired.com/how-a-windows-programs-splits-its-command-line-into-individual-arguments/
 [MSDN]:https://msdn.microsoft.com/en-us/library/windows/desktop/bb776391(v=vs.85).aspx
+[Raymonds Rules]: https://blogs.msdn.microsoft.com/oldnewthing/20100917-00/?p=12833
