@@ -36,7 +36,8 @@ The most natural style to the English language is to use SPACE as a seperator be
 
 If we look through .NET, we see that **Environment.CommandLine** is exactly what was entered on the command line, so this makes this a valuable source for writing our own tokenizer.
 
-###What are our rules? Well they not all mine, they're mostly ripped from [Raymonds Rules][Raymond], although slightly modified.  
+###What are our rules?
+Well they not all mine, they're mostly ripped from [Raymonds Rules][], although slightly modified.  
 Under Raymonds rules:
 ```
 command.exe "double"foo"bar"
