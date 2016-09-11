@@ -306,7 +306,7 @@ namespace Tokenizer.Tests
         {
             string commandLine = "\"C:\\Some Folder With A Space\\cmdlineTokenizer.exe\" \"\\\"paramquote\\\"\"";
             string[] args = cmdLineTokenizer.Tokenizer.TokenizeCommandLineToStringArray(commandLine);
-            Assert.AreEqual("\\\"paramquote\\\"\"", args[0].ToString());
+            Assert.AreEqual("\\\"paramquote\\\"", args[0].ToString());
             Assert.AreEqual(1, args.Length);
         }
 
@@ -315,7 +315,7 @@ namespace Tokenizer.Tests
         {
             string commandLine = "\"C:\\Some Folder With A Space\\cmdlineTokenizer.exe\" \"\"paramquote\"\"";
             string[] args = cmdLineTokenizer.Tokenizer.TokenizeCommandLineToStringArray(commandLine);
-            Assert.AreEqual("\"paramquote\"\"", args[0].ToString());
+            Assert.AreEqual("\"paramquote\"", args[0].ToString());
             Assert.AreEqual(1, args.Length);
         }
 
@@ -347,11 +347,11 @@ namespace Tokenizer.Tests
         }
 
         [TestMethod]
-        public void QuotedArgumentWithUnescapedQuotePairInsideReturnsSingleArgument()
+        public void QuotedArgumentWithQuotePairInsideReturnsArgumentWithSingleInternalQuote()
         {
             string commandLine = "\"C:\\Some Folder With A Space\\cmdlineTokenizer.exe\" \"param\"\"quote\"";
             string[] args = cmdLineTokenizer.Tokenizer.TokenizeCommandLineToStringArray(commandLine);
-            Assert.AreEqual("param\"\"quote", args[0].ToString());
+            Assert.AreEqual("param\"quote", args[0].ToString());
             Assert.AreEqual(1, args.Length);
         }
 
@@ -370,7 +370,7 @@ namespace Tokenizer.Tests
         {
             string commandLine = "command.exe \"\"\" surrounded by \"\"\"";
             string[] args = cmdLineTokenizer.Tokenizer.TokenizeCommandLineToStringArray(commandLine);
-            Assert.AreEqual("\"\" surrounded by \"\"", args[0].ToString());
+            Assert.AreEqual("\" surrounded by \"", args[0].ToString());
             Assert.AreEqual(1, args.Length);
         }
 
@@ -379,10 +379,10 @@ namespace Tokenizer.Tests
         {
             string commandLine = "command.exe \"\"\"\" surrounded by \"\"\"\"";
             string[] args = cmdLineTokenizer.Tokenizer.TokenizeCommandLineToStringArray(commandLine);
-            Assert.AreEqual("\"\"", args[0].ToString());
+            Assert.AreEqual("\"", args[0].ToString());
             Assert.AreEqual("surrounded", args[1].ToString());
             Assert.AreEqual("by", args[2].ToString());
-            Assert.AreEqual("\"\"", args[3].ToString());
+            Assert.AreEqual("\"", args[3].ToString());
             Assert.AreEqual(4, args.Length);
         }
 
@@ -391,7 +391,7 @@ namespace Tokenizer.Tests
         {
             string commandLine = "command.exe \"\"\"\"\" surrounded by \"\"\"\"\"";
             string[] args = cmdLineTokenizer.Tokenizer.TokenizeCommandLineToStringArray(commandLine);
-            Assert.AreEqual("\"\"\"\" surrounded by \"\"\"\"", args[0].ToString());
+            Assert.AreEqual("\"\" surrounded by \"\"", args[0].ToString());
             Assert.AreEqual(1, args.Length);
         }
 
@@ -448,13 +448,34 @@ namespace Tokenizer.Tests
         }
 
         [TestMethod]
-        public void ManyExternalQuotesReturnExpectedCount()
+        public void QuotedTwelveInternalQuotesReturnsArgumentWith6InternalQuotes()
+        {
+            //CommandLineToArgvW returns 4 internal quotes, even though 12 are supplied
+            string commandLine = "command.exe \"foo\"\"\"\"\"\"\"\"\"\"\"\"bar\"";
+            string[] args = cmdLineTokenizer.Tokenizer.TokenizeCommandLineToStringArray(commandLine);
+            Assert.AreEqual("foo\"\"\"\"\"\"bar", args[0].ToString());
+            Assert.AreEqual(1, args.Length);
+        }
+
+        [TestMethod]
+        public void FiveExternalQuotesReturnExpectedTwoCount()
         {
             //CommandLineToArgvW returns 2 external quotes either side, even though 4 are supplied.
             // in our case we return 3 either side as we only take note of the 2 outermost
             string commandLine = "command.exe \"\"\"\"\"foo\"\"\"\"\"";
             string[] args = cmdLineTokenizer.Tokenizer.TokenizeCommandLineToStringArray(commandLine);
-            Assert.AreEqual("\"\"\"\"foo\"\"\"\"", args[0].ToString());
+            Assert.AreEqual("\"\"foo\"\"", args[0].ToString());
+            Assert.AreEqual(1, args.Length);
+        }
+
+        [TestMethod]
+        public void SixExternalQuotesReturnExpectedThreeCount()
+        {
+            //CommandLineToArgvW returns 2 external quotes either side, even though 4 are supplied.
+            // in our case we return 3 either side as we only take note of the 2 outermost
+            string commandLine = "command.exe \"\"\"\"\"\"foo\"\"\"\"\"\"";
+            string[] args = cmdLineTokenizer.Tokenizer.TokenizeCommandLineToStringArray(commandLine);
+            Assert.AreEqual("\"\"\"foo\"\"\"", args[0].ToString());
             Assert.AreEqual(1, args.Length);
         }
 

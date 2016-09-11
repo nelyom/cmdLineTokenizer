@@ -70,6 +70,7 @@ namespace cmdLineTokenizer
                     {
                         token.Remove(token.Length - 1, 1);
                     }
+                    token.Replace("\"\"", "\"");
                 }
                 else
                 {

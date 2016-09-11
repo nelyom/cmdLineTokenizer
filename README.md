@@ -28,7 +28,6 @@ You can also do more odd things too.
 ```
 command.exe this" is all a single "param
 ```
-But why?  It is not natural to read!.
 
 
 ##How can this be fixed?
@@ -37,14 +36,22 @@ The most natural style to the English language is to use SPACE as a seperator be
 
 If we look through .NET, we see that **Environment.CommandLine** is exactly what was entered on the command line, so this makes this a valuable source for writing our own tokenizer.
 
-###What are our natural rules?
+###What are our rules? Well they not all mine, they're mostly ripped from [Raymonds Rules][Raymond], although slightly modified.  
+Under Raymonds rules:
+```
+command.exe "double"foo"bar"
+```
+Would return 3 arguments of 'double', 'foo' and 'bar', and, while not easy to read initially, at least it is understandable when you read through the rules.
 
+
+####So what are the rules already...
 1. SPACE is the separator between arguments.
 2. If you are outside quotations marks, a SPACE followed by " will take you inside quotation marks, but generates no output.
-3. If you are inside quotation marks, then a sequence of 2N+1 quotation mark followed by a SPACE (or the end of the command line) will signify the end of the quoted block (note: N can be 0).  The +1 quotation mark generates no output.
-4. All returned arguments trim leading and trailing whitespace.
+3. If you are inside quotation marks, then a sequence of 2N quotation marks represents N quotation marks in the output.
+4. If you are inside quotation marks, then a sequence of 2N+1 quotation mark followed by a SPACE (or the end of the command line) will signify the end of the quoted block (note: N can be 0).  The +1 quotation mark generates no output.
+5. All returned arguments trim leading and trailing whitespace.
 
-Seems simple enough..
+Seems simple enough.  Well, not quite, as you'll see, even this creates a few oddities; turns out this is quite hard to get anything that doesn't, but at least it covers all but the really odd scenarios.
 
 Examples:
 ```
@@ -68,9 +75,13 @@ command.exe "a"something"B"
 Will return an array with 1 argument of `a"something"B`.
 
 ```
-command.exe "a""""""""""""""B"
+command.exe "a""""""""""""B"
 ```
-Will return an array with 1 argument of `a""""""""""""""B`.
+Will return an array with 1 argument of `a""""""B`.
+```
+command.exe a""""""""""""B
+```
+Will return an array with 1 argument of `a""""""""""""B`.
 
 You can also do
 ```
@@ -88,17 +99,17 @@ Will return an array with 2 arguments of `surrounded` and `by`.  The double quot
 ```
 command.exe """ surrounded by """
 ```
-Will return an array with 1 arguments of `"" surrounded by ""`.
+Will return an array with 1 arguments of `" surrounded by "`.
 
 ```
 command.exe """" surrounded by """"
 ```
-Will return an array with 4 arguments of `"""`, `surrounded`, `by` and `"""`.
+Will return an array with 4 arguments of `"`, `surrounded`, `by` and `"`.
 
 ```
 command.exe """"" surrounded by """""
 ```
-Will return an array with 1 arguments of `"""" surrounded by """"`.
+Will return an array with 1 arguments of `"" surrounded by ""`.
 
 
 
