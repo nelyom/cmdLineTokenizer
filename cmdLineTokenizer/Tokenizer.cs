@@ -20,53 +20,52 @@ namespace cmdLineTokenizer
         {
 
             List<string> tokens = new List<string>();
-            var parts = commandLine.Split(' ');
             StringBuilder token = new StringBuilder(255);
+            var sections = commandLine.Split(' ');
+            
 
-            for (int curPart = 0; curPart < parts.Length; curPart++)
+            for (int curPart = 0; curPart < sections.Length; curPart++)
             {
 
-                if (parts[curPart].StartsWith("\""))
+                // We are in a quoted section!!
+                if (sections[curPart].StartsWith("\""))
                 {
                     //remove leading "
-                    token.Append(parts[curPart].Substring(1));
-                    int has1NQuote = 0;
+                    token.Append(sections[curPart].Substring(1));
+                    int quoteCount = 0;
 
-                    //find out whether the current token has the required 1 leftover "
-                    for (int i = parts[curPart].Length - 1; i > 0; i--)
+                    //Step backwards from the end of the current section to find the count of quotes from the end.
+                    //This will exclude looking at the first character, which was the " that got us here in the first place.
+                    for (; quoteCount < sections[curPart].Length - 1; quoteCount++)
                     {
-                        if (parts[curPart][i] == '"')
-                        {
-                            has1NQuote += 1;
-                        }
-                        else
+                        if (sections[curPart][sections[curPart].Length - 1 - quoteCount] != '"')
                         {
                             break;
                         }
                     }
 
-                    // if we didn't have a leftover ", then we need to add some more parts to the current token
-                    while (has1NQuote % 2 == 0 && (curPart != parts.Length - 1))
+                    // if we didn't have a leftover " (i.e. the 2N+1), then we should continue adding in the next section to the current token.
+                    while (quoteCount % 2 == 0 && (curPart != sections.Length - 1))
                     {
-                        has1NQuote = 0;
+                        quoteCount = 0;
                         curPart++;
 
-                        for (int i = parts[curPart].Length - 1; i >= 0; i--)
+                        //Step backwards from the end of the current token to find the count of quotes from the end.
+                        for (; quoteCount < sections[curPart].Length; quoteCount++)
                         {
-                            if (parts[curPart][i] == '"')
-                            {
-                                has1NQuote += 1;
-                            }
-                            else
+                            if (sections[curPart][sections[curPart].Length - 1 - quoteCount] != '"')
                             {
                                 break;
                             }
                         }
-                        token.Append(' ').Append(parts[curPart]);
+
+                        token.Append(' ').Append(sections[curPart]);
                     }
 
-                    //remove trailing " if we had a leftover (if we didn't have a leftover then we hit the end of the parts)
-                    if (has1NQuote%2 != 0)
+                    //remove trailing " if we had a leftover
+                    //if we didn't have a leftover then we go to the end of the command line without an enclosing " 
+                    //so it gets treated as a quoted argument anyway
+                    if (quoteCount%2 != 0)
                     {
                         token.Remove(token.Length - 1, 1);
                     }
@@ -74,10 +73,11 @@ namespace cmdLineTokenizer
                 }
                 else
                 {
-                    token.Append(parts[curPart]);
+                    //Not a quoted section so this is just a boring parameter
+                    token.Append(sections[curPart]);
                 }
 
-                //strip whitespace.
+                //strip whitespace (because).
                 if (!string.IsNullOrEmpty(token.ToString().Trim()))
                 tokens.Add(token.ToString().Trim());
                 
@@ -85,7 +85,7 @@ namespace cmdLineTokenizer
             }
 
 
-            // remove the first argument.  This is the executable path.
+            // remove the first argument.  This is the executable details.
             tokens.RemoveAt(0);
 
             //return the array in the same format args[] usually turn up to main in.
